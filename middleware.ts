@@ -47,6 +47,7 @@ const systemRoutes = [
   "/robots.txt",
   "/opengraph-image.jpg",
   "/favicon.ico",
+  "/setup",
 ];
 
 // 获取主机名（不含端口）
