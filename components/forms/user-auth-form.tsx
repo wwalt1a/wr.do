@@ -52,6 +52,15 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
   const [turnstileToken, setTurnstileToken] = React.useState<string>("");
   const turnstileRef = React.useRef<TurnstileRef>(null);
   const hasTurnstile = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+  const handleTurnstileVerify = React.useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
+
+  const handleTurnstileExpire = React.useCallback(() => {
+    setTurnstileToken("");
+  }, []);
+
   const searchParams = useSearchParams();
 
   const t = useTranslations("Auth");
@@ -266,11 +275,9 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
           {hasTurnstile && (
             <Turnstile
               ref={turnstileRef}
-              onVerify={(token) => setTurnstileToken(token)}
-              onExpire={() => setTurnstileToken("")}
-              onError={() => {
-                setTurnstileToken("");
-              }}
+              onVerify={handleTurnstileVerify}
+              onExpire={handleTurnstileExpire}
+              onError={handleTurnstileExpire}
             />
           )}
 

@@ -47,6 +47,14 @@ export const Turnstile = forwardRef<TurnstileRef, TurnstileProps>(
     const [isLoaded, setIsLoaded] = useState(false);
     const { resolvedTheme } = useTheme();
 
+    // 使用 Ref 稳定化外部传入的回调函数，杜绝因父组件重渲染引发的死循环刷新
+    const onVerifyRef = useRef(onVerify);
+    onVerifyRef.current = onVerify;
+    const onExpireRef = useRef(onExpire);
+    onExpireRef.current = onExpire;
+    const onErrorRef = useRef(onError);
+    onErrorRef.current = onError;
+
     const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
     useImperativeHandle(ref, () => ({
@@ -82,9 +90,11 @@ export const Turnstile = forwardRef<TurnstileRef, TurnstileProps>(
       if (!isLoaded || !containerRef.current || !siteKey || !window.turnstile)
         return;
 
+      // 如果已有已渲染的组件，先清理旧组件
       if (widgetIdRef.current) {
         try {
           window.turnstile.remove(widgetIdRef.current);
+          widgetIdRef.current = null;
         } catch {
           // ignore
         }
@@ -95,13 +105,13 @@ export const Turnstile = forwardRef<TurnstileRef, TurnstileProps>(
           sitekey: siteKey,
           theme: resolvedTheme === "dark" ? "dark" : "light",
           callback: (token: string) => {
-            onVerify(token);
+            onVerifyRef.current?.(token);
           },
           "expired-callback": () => {
-            onExpire?.();
+            onExpireRef.current?.();
           },
           "error-callback": (error: any) => {
-            onError?.(error);
+            onErrorRef.current?.(error);
           },
         });
         widgetIdRef.current = widgetId;
@@ -113,12 +123,13 @@ export const Turnstile = forwardRef<TurnstileRef, TurnstileProps>(
         if (widgetIdRef.current && window.turnstile) {
           try {
             window.turnstile.remove(widgetIdRef.current);
+            widgetIdRef.current = null;
           } catch {
             // ignore
           }
         }
       };
-    }, [isLoaded, siteKey, resolvedTheme, onVerify, onExpire, onError]);
+    }, [isLoaded, siteKey, resolvedTheme]);
 
     if (!siteKey) return null;
 
