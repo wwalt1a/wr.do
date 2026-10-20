@@ -19,12 +19,14 @@ export const env = createEnv({
     EMAIL_FROM_NAME: z.string().optional(),
     SCREENSHOTONE_BASE_URL: z.string().optional(),
     GITHUB_TOKEN: z.string().optional(),
+    TURNSTILE_SECRET_KEY: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().optional(),
     NEXT_PUBLIC_EMAIL_R2_DOMAIN: z.string().optional(),
     NEXT_PUBLIC_SUPPORT_EMAIL: z.string().optional(),
     NEXT_PUBLIC_APP_NAME: z.string().optional(),
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
   },
   runtimeEnv: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
@@ -47,5 +49,7 @@ export const env = createEnv({
     GITHUB_TOKEN: process.env.GITHUB_TOKEN,
     LinuxDo_CLIENT_ID: process.env.LinuxDo_CLIENT_ID,
     LinuxDo_CLIENT_SECRET: process.env.LinuxDo_CLIENT_SECRET,
+    TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
   },
 });

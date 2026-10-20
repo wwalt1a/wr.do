@@ -19,6 +19,7 @@ import { Icons } from "@/components/shared/icons";
 
 import { Skeleton } from "../ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { Turnstile, TurnstileRef } from "@/components/turnstile";
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
   type?: string;
@@ -48,6 +49,9 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
   const [isLinuxDoLoading, setIsLinuxDoLoading] =
     React.useState<boolean>(false);
   const [suffixWhiteList, setSuffixWhiteList] = React.useState<string[]>([]);
+  const [turnstileToken, setTurnstileToken] = React.useState<string>("");
+  const turnstileRef = React.useRef<TurnstileRef>(null);
+  const hasTurnstile = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const searchParams = useSearchParams();
 
   const t = useTranslations("Auth");
@@ -106,11 +110,16 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
   }
   async function onSubmitPwd(data: FormData2) {
     if (!checkEmailSuffix(data.email)) return;
+    if (hasTurnstile && !turnstileToken) {
+      toast.warning("Please complete security check");
+      return;
+    }
     startTransition(async () => {
       const signInResult = await signIn("credentials", {
         name: data.name,
         email: data.email,
         password: data.password,
+        turnstileToken: turnstileToken,
         redirect: false,
         callbackUrl: searchParams?.get("from") || "/dashboard",
       });
@@ -118,6 +127,8 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
       // console.log("[signInResult]", signInResult);
 
       if (signInResult?.error) {
+        turnstileRef.current?.reset();
+        setTurnstileToken("");
         const errorMaps = {
           Configuration: t("Auth configuration error"),
           CredentialsSignin: t("Incorrect email or password"),
@@ -252,9 +263,25 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
             )}
           </div>
 
+          {hasTurnstile && (
+            <Turnstile
+              ref={turnstileRef}
+              onVerify={(token) => setTurnstileToken(token)}
+              onExpire={() => setTurnstileToken("")}
+              onError={() => {
+                setTurnstileToken("");
+              }}
+            />
+          )}
+
           <Button
             className="my-2"
-            disabled={isLoading || isGoogleLoading || isGithubLoading}
+            disabled={
+              isLoading ||
+              isGoogleLoading ||
+              isGithubLoading ||
+              (hasTurnstile && !turnstileToken)
+            }
           >
             {isLoading && (
               <Icons.spinner className="mr-2 size-4 animate-spin" />

@@ -72,6 +72,7 @@ export default {
         name: { label: "name", type: "text" },
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        turnstileToken: { label: "turnstileToken", type: "text" },
       },
       async authorize(credentials) {
         const res = await fetch(
